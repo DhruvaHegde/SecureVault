@@ -23,7 +23,6 @@ public class PasswordController {
             Authentication authentication) {
 
         String email = authentication.getName();
-
         return passwordService.savePassword(request, email);
     }
 
@@ -33,8 +32,33 @@ public class PasswordController {
             Authentication authentication) {
 
         String email = authentication.getName();
-
         return passwordService.getAllPasswords(email);
+    }
+
+    // Search Passwords
+    @GetMapping("/search")
+    public List<PasswordResponse> searchPasswords(
+            @RequestParam String keyword,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        return passwordService.searchPasswords(email, keyword);
+    }
+
+    // Generate Password
+    @GetMapping("/generate")
+    public String generatePassword(
+            @RequestParam(defaultValue = "16") int length) {
+
+        return passwordService.generatePassword(length);
+    }
+
+    // Check Password Strength
+    @PostMapping("/check-strength")
+    public String checkPasswordStrength(
+            @RequestBody PasswordRequest request) {
+
+        return passwordService.checkPasswordStrength(request.getPassword());
     }
 
     // Update Password
@@ -45,7 +69,6 @@ public class PasswordController {
             Authentication authentication) {
 
         String email = authentication.getName();
-
         return passwordService.updatePassword(id, request, email);
     }
 
@@ -56,7 +79,6 @@ public class PasswordController {
             Authentication authentication) {
 
         String email = authentication.getName();
-
         return passwordService.deletePassword(id, email);
     }
 }

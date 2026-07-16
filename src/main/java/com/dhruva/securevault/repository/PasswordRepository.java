@@ -10,4 +10,9 @@ public interface PasswordRepository extends JpaRepository<PasswordEntry, Long> {
 
     List<PasswordEntry> findByUser(User user);
 
+    List<PasswordEntry> findByUserAndWebsiteNameContainingIgnoreCase(
+            User user,
+            String keyword
+    );
+
 }
