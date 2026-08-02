@@ -28,13 +28,14 @@ public class PasswordController {
 
     // View All Passwords
     @GetMapping
-    public List<PasswordResponse> getAllPasswords(
-            Authentication authentication) {
+public List<PasswordResponse> getAllPasswords(
+        Authentication authentication) {
 
-        String email = authentication.getName();
-        return passwordService.getAllPasswords(email);
-    }
+    System.out.println("Controller Hit!");
 
+    String email = authentication.getName();
+    return passwordService.getAllPasswords(email);
+}
     // Search Passwords
     @GetMapping("/search")
     public List<PasswordResponse> searchPasswords(
