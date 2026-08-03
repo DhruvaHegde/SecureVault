@@ -1,20 +1,21 @@
-﻿import { useEffect, useState } from "react";
-import Dashboard from "./pages/Dashboard";
+﻿import { Routes, Route, Navigate } from "react-router-dom";
+import { useState } from "react";
+
 import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import AddPassword from "./pages/AddPassword";
+
 import "./App.css";
 
 function App() {
+
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(localStorage.getItem("token"))
   );
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      localStorage.removeItem("token");
-    }
-  }, [isAuthenticated]);
-
-  const handleLoginSuccess = () => setIsAuthenticated(true);
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -22,13 +23,45 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
-      {isAuthenticated ? (
-        <Dashboard onLogout={handleLogout} />
-      ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
-      )}
-    </div>
+    <Routes>
+
+      <Route
+        path="/"
+        element={
+          isAuthenticated
+            ? <Navigate to="/dashboard" />
+            : <Login onLoginSuccess={handleLoginSuccess} />
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          isAuthenticated
+            ? <Dashboard onLogout={handleLogout} />
+            : <Navigate to="/" />
+        }
+      />
+
+      <Route
+        path="/add"
+        element={
+          isAuthenticated
+            ? <AddPassword />
+            : <Navigate to="/" />
+        }
+      />
+
+      <Route
+        path="/edit/:id"
+        element={
+          isAuthenticated
+            ? <AddPassword />
+            : <Navigate to="/" />
+        }
+      />
+
+    </Routes>
   );
 }
 

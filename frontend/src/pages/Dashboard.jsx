@@ -1,8 +1,10 @@
 ﻿import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PasswordTable from "../components/PasswordTable";
 
 function Dashboard({ onLogout }) {
+  const navigate = useNavigate();
   const [passwords, setPasswords] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -97,15 +99,30 @@ function Dashboard({ onLogout }) {
                 Stored entries are encrypted and available only while signed in.
               </p>
             </div>
-            <button
-              onClick={fetchPasswords}
-              className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-            >
-              Refresh
+            <div className="flex gap-3">
+
+             <button
+            onClick={() => navigate("/add")}
+            className="rounded-2xl bg-green-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+            >+Add Password
             </button>
+
+  <button
+    onClick={fetchPasswords}
+    className="rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+  >
+    Refresh
+  </button>
+
+</div>
           </div>
 
-          <PasswordTable passwords={passwords} loading={loading} />
+       <PasswordTable
+  passwords={passwords}
+  loading={loading}
+  refreshPasswords={fetchPasswords}
+  onEdit={(item) => navigate(`/edit/${item.id}`)}
+/>
         </section>
       </div>
     </div>

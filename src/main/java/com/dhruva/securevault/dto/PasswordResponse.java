@@ -2,6 +2,8 @@ package com.dhruva.securevault.dto;
 
 public class PasswordResponse {
 
+    private Long id;
+
     private String websiteName;
     private String websiteUrl;
     private String username;
@@ -12,15 +14,29 @@ public class PasswordResponse {
     public PasswordResponse() {
     }
 
-    public PasswordResponse(String websiteName, String websiteUrl,
-                            String username, String password,
-                            String category, String notes) {
+    public PasswordResponse(Long id,
+                            String websiteName,
+                            String websiteUrl,
+                            String username,
+                            String password,
+                            String category,
+                            String notes) {
+
+        this.id = id;
         this.websiteName = websiteName;
         this.websiteUrl = websiteUrl;
         this.username = username;
         this.password = password;
         this.category = category;
         this.notes = notes;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getWebsiteName() {

@@ -61,6 +61,14 @@ public List<PasswordResponse> getAllPasswords(
 
         return passwordService.checkPasswordStrength(request.getPassword());
     }
+    @GetMapping("/{id}")
+public PasswordResponse getPasswordById(
+        @PathVariable Long id,
+        Authentication authentication) {
+
+    String email = authentication.getName();
+    return passwordService.getPasswordById(id, email);
+}
 
     // Update Password
     @PutMapping("/{id}")

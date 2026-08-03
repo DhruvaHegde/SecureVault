@@ -1,6 +1,5 @@
 package com.dhruva.securevault.service;
-import com.dhruva.securevault.security.PasswordStrengthUtil;
-import com.dhruva.securevault.security.PasswordGeneratorUtil;
+
 import com.dhruva.securevault.dto.PasswordRequest;
 import com.dhruva.securevault.dto.PasswordResponse;
 import com.dhruva.securevault.entity.PasswordEntry;
@@ -8,6 +7,8 @@ import com.dhruva.securevault.entity.User;
 import com.dhruva.securevault.repository.PasswordRepository;
 import com.dhruva.securevault.repository.UserRepository;
 import com.dhruva.securevault.security.EncryptionUtil;
+import com.dhruva.securevault.security.PasswordGeneratorUtil;
+import com.dhruva.securevault.security.PasswordStrengthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,12 +28,14 @@ public class PasswordService {
     private EncryptionUtil encryptionUtil;
 
     @Autowired
-private PasswordGeneratorUtil passwordGeneratorUtil;
+    private PasswordGeneratorUtil passwordGeneratorUtil;
 
-@Autowired
-private PasswordStrengthUtil passwordStrengthUtil;
+    @Autowired
+    private PasswordStrengthUtil passwordStrengthUtil;
 
+    // ===========================
     // Save Password
+    // ===========================
     public String savePassword(PasswordRequest request, String email) {
 
         User user = userRepository.findByEmail(email).orElse(null);
@@ -46,7 +49,9 @@ private PasswordStrengthUtil passwordStrengthUtil;
         entry.setWebsiteName(request.getWebsiteName());
         entry.setWebsiteUrl(request.getWebsiteUrl());
         entry.setUsername(request.getUsername());
-        entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
+        entry.setEncryptedPassword(
+                encryptionUtil.encrypt(request.getPassword())
+        );
         entry.setCategory(request.getCategory());
         entry.setNotes(request.getNotes());
         entry.setUser(user);
@@ -56,7 +61,9 @@ private PasswordStrengthUtil passwordStrengthUtil;
         return "Password Saved Successfully!";
     }
 
-    // View Passwords
+    // ===========================
+    // View All Passwords
+    // ===========================
     public List<PasswordResponse> getAllPasswords(String email) {
 
         User user = userRepository.findByEmail(email).orElse(null);
@@ -70,7 +77,45 @@ private PasswordStrengthUtil passwordStrengthUtil;
         return convertToResponse(entries);
     }
 
+    // ===========================
+    // Get Single Password
+    // ===========================
+    public PasswordResponse getPasswordById(Long id, String email) {
+
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            return null;
+        }
+
+        PasswordEntry entry = passwordRepository.findById(id).orElse(null);
+
+        if (entry == null) {
+            return null;
+        }
+
+        if (!entry.getUser().getId().equals(user.getId())) {
+            return null;
+        }
+
+        PasswordResponse response = new PasswordResponse();
+
+        response.setId(entry.getId());
+        response.setWebsiteName(entry.getWebsiteName());
+        response.setWebsiteUrl(entry.getWebsiteUrl());
+        response.setUsername(entry.getUsername());
+        response.setPassword(
+                encryptionUtil.decrypt(entry.getEncryptedPassword())
+        );
+        response.setCategory(entry.getCategory());
+        response.setNotes(entry.getNotes());
+
+        return response;
+    }
+
+    // ===========================
     // Search Passwords
+    // ===========================
     public List<PasswordResponse> searchPasswords(String email, String keyword) {
 
         User user = userRepository.findByEmail(email).orElse(null);
@@ -80,12 +125,17 @@ private PasswordStrengthUtil passwordStrengthUtil;
         }
 
         List<PasswordEntry> entries =
-                passwordRepository.findByUserAndWebsiteNameContainingIgnoreCase(user, keyword);
+                passwordRepository.findByUserAndWebsiteNameContainingIgnoreCase(
+                        user,
+                        keyword
+                );
 
         return convertToResponse(entries);
     }
 
+    // ===========================
     // Update Password
+    // ===========================
     public String updatePassword(Long id,
                                  PasswordRequest request,
                                  String email) {
@@ -120,7 +170,9 @@ private PasswordStrengthUtil passwordStrengthUtil;
         return "Password Updated Successfully!";
     }
 
+    // ===========================
     // Delete Password
+    // ===========================
     public String deletePassword(Long id, String email) {
 
         User user = userRepository.findByEmail(email).orElse(null);
@@ -144,7 +196,9 @@ private PasswordStrengthUtil passwordStrengthUtil;
         return "Password Deleted Successfully!";
     }
 
-    // Helper Method
+    // ===========================
+    // Convert Entity -> DTO
+    // ===========================
     private List<PasswordResponse> convertToResponse(List<PasswordEntry> entries) {
 
         List<PasswordResponse> response = new ArrayList<>();
@@ -153,6 +207,7 @@ private PasswordStrengthUtil passwordStrengthUtil;
 
             PasswordResponse passwordResponse = new PasswordResponse();
 
+            passwordResponse.setId(entry.getId());
             passwordResponse.setWebsiteName(entry.getWebsiteName());
             passwordResponse.setWebsiteUrl(entry.getWebsiteUrl());
             passwordResponse.setUsername(entry.getUsername());
@@ -167,20 +222,18 @@ private PasswordStrengthUtil passwordStrengthUtil;
 
         return response;
     }
+
     // ===========================
-// Generate Secure Password
-// ===========================
-public String generatePassword(int length) {
+    // Generate Password
+    // ===========================
+    public String generatePassword(int length) {
+        return passwordGeneratorUtil.generatePassword(length);
+    }
 
-    return passwordGeneratorUtil.generatePassword(length);
-
-}
-// ===========================
-// Check Password Strength
-// ===========================
-public String checkPasswordStrength(String password) {
-
-    return passwordStrengthUtil.checkStrength(password);
-
-}
+    // ===========================
+    // Check Password Strength
+    // ===========================
+    public String checkPasswordStrength(String password) {
+        return passwordStrengthUtil.checkStrength(password);
+    }
 }
