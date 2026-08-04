@@ -5,20 +5,25 @@ import PasswordTable from "../components/PasswordTable";
 
 function Dashboard({ onLogout }) {
   const navigate = useNavigate();
+
   const [passwords, setPasswords] = useState([]);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
 
   useEffect(() => {
     fetchPasswords();
   }, []);
 
   const fetchPasswords = async () => {
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
       const token = localStorage.getItem("token");
+
       const response = await api.get("/passwords", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -27,104 +32,173 @@ function Dashboard({ onLogout }) {
 
       setPasswords(response.data || []);
     } catch (err) {
-      const status = err.response?.status;
-      if (status === 401 || status === 403) {
-        setError("Your session expired. Please sign in again.");
+      console.error(err);
+
+      if (
+        err.response?.status === 401 ||
+        err.response?.status === 403
+      ) {
+        alert("Session Expired");
         onLogout();
         return;
       }
 
-      setError(
-        err.response?.data || "Unable to load passwords. Please try again."
-      );
-      console.error("Error fetching passwords:", err);
+      setError("Unable to fetch passwords.");
     } finally {
       setLoading(false);
     }
   };
+
+  // Search + Category Filter
+  const filteredPasswords = passwords.filter((item) => {
+
+    const matchesSearch =
+      item.websiteName.toLowerCase().includes(search.toLowerCase()) ||
+      item.username.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCategory =
+      category === "All" || item.category === category;
+
+    return matchesSearch && matchesCategory;
+  });
 
   const strongCount = passwords.filter((item) => item.isStrong).length;
   const weakCount = passwords.length - strongCount;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-8">
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+
+        {/* Header */}
+
+        <div className="flex justify-between items-center mb-10">
+
           <div>
-            <p className="text-cyan-400 uppercase tracking-[0.3em] text-sm font-semibold mb-2">
+            <h1 className="text-4xl font-bold">
               SecureVault Dashboard
-            </p>
-            <h1 className="text-4xl font-bold text-white">Welcome back, vault manager</h1>
+            </h1>
+
             <p className="text-slate-400 mt-2">
-              Review your latest saved credentials and keep your online identity safe.
+              Manage your passwords securely.
             </p>
           </div>
 
           <button
             onClick={onLogout}
-            className="inline-flex items-center justify-center rounded-2xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-500"
+            className="bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl"
           >
             Logout
           </button>
-        </header>
 
-        <div className="grid gap-6 md:grid-cols-3 mb-10">
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/20">
-            <p className="text-sm text-slate-400 uppercase tracking-[0.25em] mb-3">Total Vault Items</p>
-            <p className="text-5xl font-bold text-cyan-400">{passwords.length}</p>
+        </div>
+
+        {/* Stats */}
+
+        <div className="grid md:grid-cols-3 gap-5 mb-10">
+
+          <div className="bg-slate-900 p-6 rounded-3xl">
+            <p>Total Passwords</p>
+            <h2 className="text-5xl font-bold text-cyan-400 mt-2">
+              {passwords.length}
+            </h2>
           </div>
 
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/20">
-            <p className="text-sm text-slate-400 uppercase tracking-[0.25em] mb-3">Strong Credentials</p>
-            <p className="text-5xl font-bold text-emerald-400">{strongCount}</p>
+          <div className="bg-slate-900 p-6 rounded-3xl">
+            <p>Strong Passwords</p>
+            <h2 className="text-5xl font-bold text-green-400 mt-2">
+              {strongCount}
+            </h2>
           </div>
 
-          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/20">
-            <p className="text-sm text-slate-400 uppercase tracking-[0.25em] mb-3">Weak Credentials</p>
-            <p className="text-5xl font-bold text-rose-400">{weakCount}</p>
+          <div className="bg-slate-900 p-6 rounded-3xl">
+            <p>Weak Passwords</p>
+            <h2 className="text-5xl font-bold text-red-400 mt-2">
+              {weakCount}
+            </h2>
           </div>
+
         </div>
 
         {error && (
-          <div className="mb-6 rounded-3xl border border-red-500/30 bg-red-500/10 p-5 text-red-200">
+          <div className="bg-red-500 p-4 rounded-xl mb-6">
             {error}
           </div>
         )}
 
-        <section className="rounded-3xl border border-slate-800/80 bg-slate-900/80 p-6 shadow-xl shadow-slate-950/20">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Vault */}
+
+        <div className="bg-slate-900 rounded-3xl p-6">
+
+          <div className="flex flex-wrap gap-4 justify-between items-center mb-6">
+
             <div>
-              <h2 className="text-2xl font-semibold text-white">Password Vault</h2>
-              <p className="text-slate-400 mt-1">
-                Stored entries are encrypted and available only while signed in.
+              <h2 className="text-2xl font-bold">
+                Password Vault
+              </h2>
+
+              <p className="text-slate-400">
+                Search and manage your passwords.
               </p>
             </div>
-            <div className="flex gap-3">
 
-             <button
-            onClick={() => navigate("/add")}
-            className="rounded-2xl bg-green-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
-            >+Add Password
-            </button>
+            <div className="flex gap-3 flex-wrap">
 
-  <button
-    onClick={fetchPasswords}
-    className="rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
-  >
-    Refresh
-  </button>
+              {/* Search */}
 
-</div>
+              <input
+                type="text"
+                placeholder="Search website..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="bg-slate-800 px-4 py-3 rounded-xl text-white border border-slate-700"
+              />
+
+              {/* Category Filter */}
+
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="bg-slate-800 px-4 py-3 rounded-xl text-white border border-slate-700"
+              >
+                <option value="All">All Categories</option>
+                <option value="Development">Development</option>
+                <option value="Social">Social</option>
+                <option value="Banking">Banking</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Education">Education</option>
+                <option value="Personal">Personal</option>
+              </select>
+
+              <button
+                onClick={() => navigate("/add")}
+                className="bg-green-500 hover:bg-green-600 px-5 py-3 rounded-xl"
+              >
+                + Add Password
+              </button>
+
+              <button
+                onClick={fetchPasswords}
+                className="bg-cyan-500 hover:bg-cyan-600 px-5 py-3 rounded-xl text-black font-semibold"
+              >
+                Refresh
+              </button>
+
+            </div>
+
           </div>
 
-       <PasswordTable
-  passwords={passwords}
-  loading={loading}
-  refreshPasswords={fetchPasswords}
-  onEdit={(item) => navigate(`/edit/${item.id}`)}
-/>
-        </section>
+          <PasswordTable
+            passwords={filteredPasswords}
+            loading={loading}
+            refreshPasswords={fetchPasswords}
+            onEdit={(item) => navigate(`/edit/${item.id}`)}
+          />
+
+        </div>
+
       </div>
+
     </div>
   );
 }

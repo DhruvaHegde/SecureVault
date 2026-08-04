@@ -23,24 +23,40 @@ function AddPassword() {
   }, [id]);
 
   const fetchPassword = async () => {
-    try {
+  try {
+    const token = localStorage.getItem("token");
 
-      const token = localStorage.getItem("token");
+    console.log("Token:", token);
 
-      const response = await api.get(`/passwords/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const response = await api.get(`/passwords/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      setFormData(response.data);
+    console.log("Response:", response);
+    console.log("Data:", response.data);
 
-    } catch (error) {
-      console.error(error);
-      alert("Unable to load password.");
+    setFormData({
+      websiteName: response.data.websiteName || "",
+      websiteUrl: response.data.websiteUrl || "",
+      username: response.data.username || "",
+      password: response.data.password || "",
+      category: response.data.category || "",
+      notes: response.data.notes || "",
+    });
+
+  } catch (error) {
+    console.error("Fetch Error:", error);
+
+    if (error.response) {
+      console.log(error.response.data);
+      console.log(error.response.status);
     }
-  };
 
+    alert("Unable to load password.");
+  }
+};
   const handleChange = (e) => {
     setFormData({
       ...formData,
