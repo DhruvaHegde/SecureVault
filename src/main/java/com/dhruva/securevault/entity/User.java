@@ -17,11 +17,10 @@ public class User {
 
     private String password;
 
-    // Default Constructor
+    private String provider;
+
     public User() {
     }
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -53,5 +52,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 }

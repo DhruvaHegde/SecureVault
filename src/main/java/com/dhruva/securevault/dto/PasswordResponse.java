@@ -1,5 +1,7 @@
 package com.dhruva.securevault.dto;
 
+import java.time.LocalDateTime;
+
 public class PasswordResponse {
 
     private Long id;
@@ -11,16 +13,20 @@ public class PasswordResponse {
     private String category;
     private String notes;
 
+    private LocalDateTime lastUpdated;
+
     public PasswordResponse() {
     }
 
-    public PasswordResponse(Long id,
-                            String websiteName,
-                            String websiteUrl,
-                            String username,
-                            String password,
-                            String category,
-                            String notes) {
+    public PasswordResponse(
+            Long id,
+            String websiteName,
+            String websiteUrl,
+            String username,
+            String password,
+            String category,
+            String notes,
+            LocalDateTime lastUpdated) {
 
         this.id = id;
         this.websiteName = websiteName;
@@ -29,7 +35,10 @@ public class PasswordResponse {
         this.password = password;
         this.category = category;
         this.notes = notes;
+        this.lastUpdated = lastUpdated;
     }
+
+    // Getters & Setters...
 
     public Long getId() {
         return id;
@@ -85,5 +94,13 @@ public class PasswordResponse {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 }

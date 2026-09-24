@@ -1,6 +1,7 @@
 package com.dhruva.securevault.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "password_entries")
@@ -23,6 +24,9 @@ public class PasswordEntry {
 
     @Column(length = 1000)
     private String notes;
+
+    // New Field
+    private LocalDateTime lastUpdated;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -85,6 +89,14 @@ public class PasswordEntry {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 
     public User getUser() {

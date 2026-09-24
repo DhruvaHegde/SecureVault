@@ -12,9 +12,9 @@ import com.dhruva.securevault.security.PasswordStrengthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 @Service
 public class PasswordService {
 
@@ -54,6 +54,7 @@ public class PasswordService {
         );
         entry.setCategory(request.getCategory());
         entry.setNotes(request.getNotes());
+        entry.setLastUpdated(LocalDateTime.now());
         entry.setUser(user);
 
         passwordRepository.save(entry);
@@ -109,6 +110,7 @@ public class PasswordService {
         );
         response.setCategory(entry.getCategory());
         response.setNotes(entry.getNotes());
+        response.setLastUpdated(entry.getLastUpdated());
 
         return response;
     }
@@ -164,6 +166,7 @@ public class PasswordService {
         );
         entry.setCategory(request.getCategory());
         entry.setNotes(request.getNotes());
+        entry.setLastUpdated(LocalDateTime.now());
 
         passwordRepository.save(entry);
 
@@ -216,6 +219,7 @@ public class PasswordService {
             );
             passwordResponse.setCategory(entry.getCategory());
             passwordResponse.setNotes(entry.getNotes());
+            passwordResponse.setLastUpdated(entry.getLastUpdated());
 
             response.add(passwordResponse);
         }
