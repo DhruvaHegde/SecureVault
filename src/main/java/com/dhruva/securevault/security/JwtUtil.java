@@ -4,32 +4,46 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private static final String SECRET =
-            "MySuperSecretKeyForSecureVaultProject123456789";
+    private final SecretKey secretKey;
 
-    private final SecretKey secretKey =
-            Keys.hmacShaKeyFor(SECRET.getBytes());
+    public JwtUtil(
+            @Value("${securevault.jwt-secret}")
+            String secret
+    ) {
+        this.secretKey = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
+    }
 
-    // Generate JWT Token
     public String generateToken(String email) {
 
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .setExpiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + 1000L * 60 * 60 * 24
+                        )
+                )
+                .signWith(
+                        secretKey,
+                        SignatureAlgorithm.HS256
+                )
                 .compact();
     }
 
-    // Extract Username (Email)
     public String extractUsername(String token) {
 
         Claims claims = Jwts.parserBuilder()
@@ -41,9 +55,12 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
-    // Validate JWT Token
-    public boolean validateToken(String token, String email) {
+    public boolean validateToken(
+            String token,
+            String email
+    ) {
 
-        return extractUsername(token).equals(email);
+        return extractUsername(token)
+                .equals(email);
     }
 }

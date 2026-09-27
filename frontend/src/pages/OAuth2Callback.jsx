@@ -1,63 +1,113 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 function OAuth2Callback({ onLoginSuccess }) {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+  const [message, setMessage] = useState(
+    "Completing Google login..."
+  );
 
-    // Only process the callback if a token exists
-    if (!token) {
+  // Prevent OAuth code from being exchanged more than once
+  const hasExchangedCode = useRef(false);
+
+  useEffect(() => {
+    if (hasExchangedCode.current) {
       return;
     }
 
-    // Save JWT
-    localStorage.setItem("token", token);
+    hasExchangedCode.current = true;
 
-    console.log("Google login successful");
-    console.log(
-      "Token saved:",
-      Boolean(localStorage.getItem("token"))
-    );
+    const exchangeCode = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
 
-    toast.success("Google login successful!");
+      if (!code) {
+        setMessage("Invalid Google login request.");
+        toast.error("Google login failed.");
+        return;
+      }
 
-    // Update authentication state
-    if (onLoginSuccess) {
-      onLoginSuccess();
-    }
+      try {
+        setMessage("Verifying Google account...");
 
-    // Remove token from URL
-    window.history.replaceState(
-      {},
-      document.title,
-      "/oauth2/callback"
-    );
+        const response = await fetch(
+          "http://localhost:8081/api/auth/oauth2/exchange",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code: code,
+            }),
+          }
+        );
 
-    // Go to dashboard
-    navigate("/dashboard", {
-      replace: true,
-    });
+        const data = await response.json();
 
-    // Run this callback only once
+        if (!response.ok || !data.token) {
+          throw new Error(
+            data.message || "Google login failed."
+          );
+        }
+
+        // Save JWT
+        localStorage.setItem("token", data.token);
+
+        toast.success("Google login successful!");
+
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
+
+        // Remove code from browser URL
+        window.history.replaceState(
+          {},
+          document.title,
+          "/oauth2/callback"
+        );
+
+        // Go to dashboard
+        navigate("/dashboard", {
+          replace: true,
+        });
+
+      } catch (error) {
+        console.error(
+          "Google OAuth exchange failed:",
+          error
+        );
+
+        setMessage(
+          error.message ||
+          "Unable to complete Google login."
+        );
+
+        toast.error(
+          error.message ||
+          "Google login failed."
+        );
+      }
+    };
+
+    exchangeCode();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
       <div className="text-center">
-
         <div className="text-cyan-400 text-xl font-semibold">
-          Signing you in...
+          {message}
         </div>
 
         <p className="text-slate-400 mt-2">
-          Please wait while SecureVault completes Google login.
+          Please wait while SecureVault completes
+          your Google login.
         </p>
-
       </div>
     </div>
   );

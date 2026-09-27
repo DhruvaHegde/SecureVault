@@ -2,9 +2,12 @@ package com.dhruva.securevault.security;
 
 import com.dhruva.securevault.entity.User;
 import com.dhruva.securevault.repository.UserRepository;
+import com.dhruva.securevault.service.OAuthCodeService;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -14,13 +17,14 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler {
+public class GoogleOAuth2SuccessHandler
+        implements AuthenticationSuccessHandler {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private OAuthCodeService oauthCodeService;
 
     @Override
     public void onAuthenticationSuccess(
@@ -44,40 +48,61 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
+                .orElse(null);
 
-                    User newUser = new User();
+        // Existing account
+        if (user != null) {
 
-                    newUser.setFullName(
-                            name != null && !name.isBlank()
-                                    ? name
-                                    : email.split("@")[0]
-                    );
+            // Existing LOCAL account cannot silently switch to Google
+            if ("LOCAL".equalsIgnoreCase(user.getProvider())) {
 
-                    newUser.setEmail(email);
+                response.sendError(
+                        HttpServletResponse.SC_CONFLICT,
+                        "An account with this email already exists. Please login using email and password."
+                );
 
-                    newUser.setPassword(null);
+                return;
+            }
 
-                    newUser.setProvider("GOOGLE");
+            // Existing GOOGLE account
+            if ("GOOGLE".equalsIgnoreCase(user.getProvider())) {
 
-                    return userRepository.save(newUser);
-                });
+                String code = oauthCodeService.createCode(
+                        user.getEmail()
+                );
 
-        // If an existing account is being used with Google,
-        // mark it as Google-enabled.
-        if (user.getProvider() == null ||
-                user.getProvider().isBlank()) {
+                response.sendRedirect(
+                        "http://localhost:5173/oauth2/callback?code="
+                                + code
+                );
 
-            user.setProvider("GOOGLE");
-            userRepository.save(user);
+                return;
+            }
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        // New Google account
+        User newUser = new User();
 
-        String frontendUrl =
-                "http://localhost:5173/oauth2/callback?token="
-                        + token;
+        newUser.setFullName(
+                name != null && !name.isBlank()
+                        ? name
+                        : email.split("@")[0]
+        );
 
-        response.sendRedirect(frontendUrl);
+        newUser.setEmail(email);
+        newUser.setPassword(null);
+        newUser.setProvider("GOOGLE");
+
+        User savedUser = userRepository.save(newUser);
+
+        // Create one-time OAuth code
+        String code = oauthCodeService.createCode(
+                savedUser.getEmail()
+        );
+
+        response.sendRedirect(
+                "http://localhost:5173/oauth2/callback?code="
+                        + code
+        );
     }
 }

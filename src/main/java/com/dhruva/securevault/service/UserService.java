@@ -32,10 +32,10 @@ public class UserService {
 
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-
         user.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
+        user.setProvider("LOCAL");
 
         userRepository.save(user);
 
@@ -52,7 +52,15 @@ public class UserService {
             return "User not found!";
         }
 
-        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        // Google accounts must use Google login
+        if ("GOOGLE".equalsIgnoreCase(user.getProvider())) {
+            return "This account uses Google login. Please continue with Google.";
+        }
+
+        if (passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword()
+        )) {
 
             String token = jwtUtil.generateToken(user.getEmail());
 
